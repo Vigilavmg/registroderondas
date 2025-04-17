@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Ronda</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, textarea, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Registro de Ronda</h2>
+
+  <form id="registroForm">
+    <input type="text" id="nome" placeholder="Nome do Vigilante" required />
+    <textarea id="observacao" placeholder="Observações (opcional)"></textarea>
+    <input type="hidden" id="local" />
+    <input type="hidden" id="latitude" />
+    <input type="hidden" id="longitude" />
+    <button type="submit">Registrar</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    // Captura local via URL (?local=Maiolini entrada, por exemplo)
+    const urlParams = new URLSearchParams(window.location.search);
+    const local = urlParams.get("local") || "Desconhecido";
+    document.getElementById("local").value = local;
+
+    // Captura localização do navegador
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        document.getElementById("latitude").value = pos.coords.latitude;
+        document.getElementById("longitude").value = pos.coords.longitude;
+      }, function() {
+        document.getElementById("status").textContent = "Erro ao obter localização";
+      });
+    } else {
+      document.getElementById("status").textContent = "Geolocalização não suportada.";
+    }
+
+    document.getElementById("registroForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      document.getElementById("status").textContent = "Enviando...";
+
+      const dados = {
+        nome: document.getElementById("nome").value,
+        observacao: document.getElementById("observacao").value,
+        local: document.getElementById("local").value,
+        latitude: document.getElementById("latitude").value,
+        longitude: document.getElementById("longitude").value
+      };
+
+      fetch("https://script.google.com/macros/s/AKfycbzJ3ZSBwIa9iCLdk9GX_Tuo8m7Q4S7zkFyBJ6LrA0bXRkjCuV6ESBXlFEjZ0NVvFx7T1w/exec", {
+        method: "POST",
+        body: JSON.stringify(dados)
+      })
+      .then(res => res.text())
+      .then(txt => {
+        document.getElementById("status").textContent = "✅ Registro feito com sucesso!";
+        document.getElementById("registroForm").reset();
+      })
+      .catch(err => {
+        document.getElementById("status").textContent = "❌ Erro ao enviar: " + err;
+      });
+    });
+  </script>
+</body>
+</html>
